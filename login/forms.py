@@ -1,8 +1,5 @@
-from django import forms
-from .models import LoginData
+from django.contrib.auth.forms import AuthenticationForm
 
 
-class LoginForm(forms.ModelForm):
-    class Meta:
-        model = LoginData
-        fields = ('Username', 'Password',)
+class LoginForm(AuthenticationForm):
+    fields = ("username", "password",)

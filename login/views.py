@@ -5,16 +5,18 @@ from django.contrib.auth import authenticate, login
 
 def loginPage(request):
     if(request.method == "POST"):
-        form = LoginForm(request.POST)
+        form = LoginForm(data=request.POST)
         if(form.is_valid()):
-            logindata = form.save(commit=False)
-            currentUser = authenticate(username=logindata.Username,
-                                       password=logindata.Password)
+            form = form.clean()
+            currentUser = authenticate(username=form['username'],
+                                       password=form['password'])
             if(currentUser):
                 login(request, currentUser)
                 return redirect('/tripPlanner')
             else:
                 return redirect('/')
+        else:
+            return redirect('/')
     else:
         if(request.user.is_authenticated):
             return redirect('/tripPlanner')

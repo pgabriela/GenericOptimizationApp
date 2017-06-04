@@ -1,6 +1,6 @@
 <html>
 	<body>
-		<form method="POST">{% csrf_token %}
+		<form method="POST" action={% url 'loginPage' %}>{% csrf_token %}
 			{{ form.as_p }}
 			<button type="submit">Login</button>
 		</form>

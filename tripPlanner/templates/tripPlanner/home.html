@@ -1,2 +1,11 @@
 <html>
+    <h1>Logged in as: {{ user.username }}</h1>
+    <form method="POST" action={% url 'makeProject' %}>{% csrf_token %}
+        <button type="submit">Make Group</button>
+    </form>
+    <h1>Your Groups:</h1>
+
+    <form method="POST" action={% url 'logoutPage' %}>{% csrf_token %}
+        <button type="submit">Logout</button>
+    </form>
 </html>
