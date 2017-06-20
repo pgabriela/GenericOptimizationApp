@@ -1,0 +1,8 @@
+{% extends 'tripPlanner/base.html' %}
+
+{% block content %}
+<h2 style="color:green;">{{ text }}</h2>
+<a href="{% url 'tripPlanner:inviteFriend' projpk=projpk %}">
+    <button type="submit">Invite More</button>
+</a>
+{% endblock %}

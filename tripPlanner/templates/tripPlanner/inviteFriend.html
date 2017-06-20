@@ -1,0 +1,8 @@
+{% extends 'tripPlanner/base.html' %}
+
+{% block content %}
+<form action={% url 'tripPlanner:inviteFriend' projpk=projpk %} method="POST">{% csrf_token %}
+    {{ form }}
+    <input type="submit" value="Invite" />
+</form>
+{% endblock %}

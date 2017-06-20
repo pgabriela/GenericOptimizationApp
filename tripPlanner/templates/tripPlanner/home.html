@@ -1,11 +1,37 @@
-<html>
-    <h1>Logged in as: {{ user.username }}</h1>
-    <form method="POST" action={% url 'makeProject' %}>{% csrf_token %}
-        <button type="submit">Make Group</button>
-    </form>
-    <h1>Your Groups:</h1>
+{% extends 'tripPlanner/base.html' %}
 
-    <form method="POST" action={% url 'logoutPage' %}>{% csrf_token %}
-        <button type="submit">Logout</button>
-    </form>
-</html>
+{% block content %}
+<h2>Your Groups:</h2>
+
+<ul>
+    {% for group in groups %}
+    <li>
+        <a href="{% url 'tripPlanner:groupDetail' pk=group.ingroup.pk %}">
+            <h4>{{ group.ingroup }}</h4>
+        </a>
+    </li>
+    {% endfor %}
+</ul>
+<BR>
+<form method="POST" action={% url 'tripPlanner:createGroup' %}>{% csrf_token %}
+    <button type="submit">Make Group</button>
+</form>
+<BR>
+<h2>Invitation Request By You:</h2>
+<ul>
+    {% for proj in hostingProjects %}
+        {% for invitee in proj.projectinvitee_set.all %}
+        <li>{{ proj.forProject.projectname }}: You invites {{ invitee.invitee }}</li>
+        {% endfor %}
+    {% endfor %}
+</ul>
+<BR>
+<h2>Invitation Request To You:</h2>
+<ul>
+    {% for invitedIn in invitedInProjects %}
+    <li>{{ invitedIn.host.forProject }}: {{ invitedIn.host.host }} invites you</li>
+    {% endfor %}
+</ul>
+<BR>
+
+{% endblock %}

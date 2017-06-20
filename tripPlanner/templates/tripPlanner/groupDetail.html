@@ -1,0 +1,16 @@
+{% extends 'tripPlanner/base.html' %}
+
+{% block content %}
+<h1>Project Name: {{ group.projectname }}</h1>
+<h1>In Topic: {{ group.inTopic }}</h1>
+<br>
+<h2>Members:</h2>
+<ul>
+    {% for member in groupmembers %}
+    <li><h3>{{ member.groupUsername }}</h3></li>
+    {% endfor %}
+</ul>
+<br>
+<a href="{% url 'tripPlanner:inviteFriend' projpk=group.id %}"><button type="submit">Invite
+        Friends</button></a>
+{% endblock %}
