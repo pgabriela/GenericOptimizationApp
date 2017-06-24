@@ -52,12 +52,16 @@ class TopicDatabase(models.Model):
 
 
 class Preference(models.Model):
-    question = models.ForeignKey(Question, on_delete=models.CASCADE)
     answer = models.ForeignKey(Answer, on_delete=models.CASCADE)
     groupUser = models.ForeignKey(GroupUser, null=True,
                                   on_delete=models.CASCADE)
     forTopicDatabase = models.ForeignKey(TopicDatabase, null=True,
                                          on_delete=models.CASCADE)
+
+    def __str__(self):
+        return "%s: %s=%s" % (self.groupUser.__str__(),
+                              self.answer.forQuestion,
+                              self.answer)
 
 
 class ProjectHost(models.Model):

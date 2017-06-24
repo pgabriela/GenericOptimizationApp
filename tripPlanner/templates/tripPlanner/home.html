@@ -29,7 +29,15 @@
 <h2>Invitation Request To You:</h2>
 <ul>
     {% for invitedIn in invitedInProjects %}
-    <li>{{ invitedIn.host.forProject }}: {{ invitedIn.host.host }} invites you</li>
+    <li>{{ invitedIn.host.forProject }}: {{ invitedIn.host.host }} invites you
+        <a href="{% url 'tripPlanner:acceptInvitation' projpk=invitedIn.host.forProject.pk ipk=invitedIn.pk %}">
+            <button type="submit">Accept</button>
+        </a>
+        <a href="{% url 'tripPlanner:declineInvitation' ipk=invitedIn.pk %}">
+            <button type="submit">Decline</button>
+        </a>
+
+    </li>
     {% endfor %}
 </ul>
 <BR>

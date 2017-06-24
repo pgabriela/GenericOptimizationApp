@@ -8,6 +8,12 @@
 <ul>
     {% for member in groupmembers %}
     <li><h3>{{ member.groupUsername }}</h3></li>
+    <h4>with Preferences:</h4>
+    <ul>
+        {% for pref in member.preference_set.all %}
+        <li>{{ pref.answer.forQuestion }}: {{ pref.answer }}</li>
+        {% endfor %}
+    </ul>
     {% endfor %}
 </ul>
 <br>

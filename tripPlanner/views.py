@@ -1,8 +1,10 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import logout
-from .models import GroupUser, ProjectGroup, ProjectHost, ProjectInvitee
-from .forms import InviteFriendForm
+from .models import GroupUser, ProjectGroup, ProjectHost, ProjectInvitee,\
+    Answer, Preference
+from .forms import InviteFriendForm, MakeGroupForm, MakePrefsForm
 from django.contrib.auth.models import User
+from django import forms
 
 
 def home(request):
@@ -27,14 +29,83 @@ def logoutPage(request):
 
 def createGroup(request):
     if(request.user.is_authenticated):
-        return render(request, 'tripPlanner/createGroup.html', {})
+        if(request.method == "POST"):
+            form = MakeGroupForm(request.POST)
+            if(form.is_valid()):
+                projectGroup = form.save()
+                groupUser = GroupUser(groupUsername=request.user,
+                                      ingroup=projectGroup)
+                groupUser.save()
+                return redirect('tripPlanner:makingPreferences',
+                                projpk=projectGroup.pk)
+            else:
+                form = MakeGroupForm()
+                return render(request, 'tripPlanner/createGroup.html',
+                              {
+                                  'form': form,
+                              })
+        else:
+            form = MakeGroupForm()
+            return render(request, 'tripPlanner/createGroup.html',
+                          {
+                              'form': form,
+                          })
     else:
         return redirect('loginPage')
 
 
-def createGroup2(request):
+def makingPreferences(request, projpk):
     if(request.user.is_authenticated):
-        """todo"""
+        if(request.method == "POST"):
+            form = MakePrefsForm(request.POST)
+            if(form.is_valid()):
+                counter = 1
+                for x in range(len(request.POST.dict())):
+                    theVar = request.POST.dict().get('question_%s' %
+                                                     counter)
+                    if(theVar):
+                        ans = Answer.objects.get(pk=theVar)
+                        counter += 1
+                    else:
+                        continue
+                    groupUser = GroupUser.objects.\
+                        get(groupUsername=request.user,
+                            ingroup=ProjectGroup.objects.get(pk=projpk))
+                    Preference(answer=ans, groupUser=groupUser).save()
+                return redirect('tripPlanner:groupDetail', pk=projpk)
+            else:
+                return redirect('/')
+        else:
+            theGroup = get_object_or_404(ProjectGroup, pk=projpk)
+            groupUserAlready =\
+                GroupUser.objects.filter(groupUsername=request.user,
+                                         ingroup=theGroup)
+            if(not groupUserAlready):
+                groupUser = GroupUser(groupUsername=request.user,
+                                      ingroup=theGroup)
+                groupUser.save()
+            questions = {}
+            answers = []
+            theTopic = theGroup.inTopic
+            i = 1
+            for question in theTopic.question_set.all():
+                for answer in question.answer_set.all():
+                    answers.append((str(answer.pk), answer.text))
+                questions['question_%s' % i] =\
+                    forms.\
+                    ChoiceField(choices=answers,
+                                label=question.text)
+                answers = []
+                i += 1
+            form = MakePrefsForm()
+            for x in range(len(questions)):
+                form.__dict__['fields']['question_%s' % str(x+1)] =\
+                    questions['question_%s' % str(x+1)]
+            return render(request, 'tripPlanner/makingPreferences.html',
+                          {
+                              'form': form,
+                              'projpk': projpk,
+                          })
     else:
         return redirect('loginPage')
 
@@ -66,12 +137,19 @@ def inviteFriend(request, projpk):
                     if(invitee != request.user):
                         """invite"""
                         projectDB = get_object_or_404(ProjectGroup, pk=projpk)
+                        alreadyInProj = GroupUser.objects.\
+                            filter(groupUsername=invitee,
+                                   ingroup=projectDB)
+                        if(alreadyInProj):
+                            return redirect('tripPlanner:inviteResultFalse',
+                                            projpk=projpk,
+                                            errNo=3,
+                                            username=form['username'])
                         already = ProjectInvitee.\
                             objects.\
                             filter(invitee=invitee,
                                    host=ProjectHost.objects.
-                                   filter(forProject=projectDB,
-                                          host=request.user))
+                                   filter(forProject=projectDB))
                         if(already):
                             return redirect('tripPlanner:inviteResultFalse',
                                             projpk=projpk,
@@ -85,7 +163,7 @@ def inviteFriend(request, projpk):
                                                  host=request.user)
                             hostDB.save()
                         else:
-                            hostDB = hostDBalready
+                            hostDB = hostDBalready[0]
                         inviteeDB = ProjectInvitee(host=hostDB,
                                                    invitee=invitee)
                         inviteeDB.save()
@@ -129,12 +207,30 @@ def inviteResultFalse(request, projpk, username, errNo):
         text = "There is no user with username: %s" % (username)
     elif(int(errNo) == 0):
         text = "You cannot invite yourself!"
+    elif(int(errNo) == 2):
+        text = "%s have been invited to %s" % (username,
+                                               ProjectGroup.objects.
+                                               get(pk=projpk))
     else:
-        text = "You have invited %s to %s" % (username,
-                                              ProjectGroup.objects.
-                                              get(pk=projpk))
+        text = "%s is already in this group" % username
     return render(request, 'tripPlanner/inviteResultFalse.html',
                   {
                       'projpk': projpk,
                       'text': text,
                   })
+
+
+def declineInvitation(request, ipk):
+    if(request.user.is_authenticated):
+        ProjectInvitee.objects.get(pk=ipk).delete()
+        return redirect('/')
+    else:
+        return redirect('/')
+
+
+def acceptInvitation(request, projpk, ipk):
+    if(request.user.is_authenticated):
+        ProjectInvitee.objects.get(pk=ipk).delete()
+        return redirect('tripPlanner:makingPreferences', projpk=projpk)
+    else:
+        return redirect('/')
